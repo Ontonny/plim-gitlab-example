@@ -1,0 +1,9 @@
+- hosts: all
+  gather_facts: false
+  tasks:
+    - ping:
+      connection: ssh
+    - name: This command
+      ansible.builtin.shell:
+        cmd: ls -la
+        chdir: /

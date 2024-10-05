@@ -1,0 +1,129 @@
+stages:
+  - build
+  - deploy
+  - test1
+  - test2
+  - test3
+  - echo
+  - ansible
+
+# you can delete this line if you're not using Docker
+image: alpine/ansible:latest
+
+run_ansible:
+  stage: ansible
+  before_script:
+    - wget https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+    - chmod +x ./jq-linux-amd64
+    - cp jq-linux-amd64 /usr/bin/jq
+    - which jq
+    - which ansible-playbook
+    - ls -la
+    - mkdir -p ~/.ssh && echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 0600 ~/.ssh/id_rsa && cat ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+    - nc -zv ansible 22 || echo "Port is not open"
+    - echo $(cat $TRIGGER_PAYLOAD) | jq '.variables.ansible_base64'| base64 -d
+    - echo $(cat $TRIGGER_PAYLOAD) | jq '.variables.ansible_base64'| base64 -d | jq -r | bash
+  script:
+    - ls -la
+  rules:
+    - if: '$ansible_base64 != null'
+      when: always
+
+build_test_export_json:
+  stage: build
+  before_script:
+    - which jq
+    - echo $(cat $TRIGGER_PAYLOAD) | jq '.variables.jsonbase64'| base64 -d
+    - echo $(cat $TRIGGER_PAYLOAD) | jq '.variables.jsonbase64'| base64 -d |  jq 
+  script:
+    - ls -la
+    - cat -v export-json.sh
+    - source export-json.sh
+    - bash export-json.sh
+    - echo "$id is exported" 
+    - env
+    - echo "$popup is exported"
+  rules:
+    - if: '$jsonbase64 != null'
+      when: always
+# test1:
+#   stage: test
+#   script:
+#     - echo "Do a test here"
+#     - echo "For example run a test suite"
+
+# test2:
+#   stage: test
+#   script:
+#     - echo "Do another parallel test here"
+#     - echo "For example run a lint test"
+
+# deploy1:
+#   stage: deploy
+#   script:
+#     - echo "Do your deploy here"
+#   environment: production
+test_checkbox:
+  script: "echo checkbox is TRUE!"
+  stage: echo
+  rules:
+    - if: '$TEST_CHECKBOX == "True"'
+      when: always
+
+input_test:
+  script: "echo Hello 1!"
+  stage: echo
+  rules:
+    - if: '$TEST_INPUT == "run"'
+      when: always
+
+input_password_test:
+  script: "echo Hello 1!"
+  stage: echo
+  rules:
+    - if: '$TEST_PASSWD == "run"'
+      when: always
+
+radio1:
+  script: "echo Hello 1!"
+  stage: echo
+  rules:
+    - if: '$TEST_RADIO == "1"'
+      when: always
+radio2:
+  script: "echo Hello 2!"
+  stage: echo
+  rules:
+    - if: '$TEST_RADIO == "2"'
+      when: always
+radio3:
+  script: "echo Hello 3!"
+  stage: echo
+  rules:
+    - if: '$TEST_RADIO == "3"'
+      when: always
+radio4:
+  script: "echo Hello 4!"
+  stage: echo
+  rules:
+    - if: '$TEST_RADIO == "4"'
+      when: always
+Select_Human:
+  script: "echo Human"
+  stage: echo
+  rules:
+    - if: '$TEST_SELECT == "Human"'
+      when: always
+Select_Animal:
+  script: "echo Animal"
+  stage: echo
+  rules:
+    - if: '$TEST_SELECT == "Animal"'
+      when: always
+Select_Male:
+  script: "echo Male"
+  stage: echo
+  rules:
+    - if: '$TEST_SELECT == "Male"'
+      when: always
